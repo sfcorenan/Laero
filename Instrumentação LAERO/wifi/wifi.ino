@@ -1,7 +1,3 @@
-
-
-
-/* WiFi parameters and credentials */
 #include <WiFi.h>
 const char* ssid     = "AERO";
 const char* password = "aerodromo";
@@ -22,29 +18,26 @@ float localTemp = 0;
 #define ANALOG_PIN_0 36
 int analog_value = 0;
 
-void setup()
+void connectWiFi(void)
 {
-  Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT); 
-  delay(10);
-
-  connectWiFi();
- 
-  dht.begin();
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+  server.begin();
 }
 
-int value = 0;
-
-void loop()
-{
-  analog_value = analogRead(ANALOG_PIN_0);
-  getDHT();
-  WiFiLocalWebPageCtrl();
-}
-
-/***************************************************
-* Get indoor Temp/Hum data
-****************************************************/
 void getDHT()
 {
   float tempIni = localTemp;
@@ -59,9 +52,6 @@ void getDHT()
   }
 }
 
-/***************************************************
-* Send and receive data from Local Page
-****************************************************/
 void WiFiLocalWebPageCtrl(void)
 {
   WiFiClient client = server.available();   // listen for incoming clients
@@ -86,10 +76,10 @@ void WiFiLocalWebPageCtrl(void)
 
             // the content of the HTTP response follows the header:
             //WiFiLocalWebPageCtrl(); 
-              client.print("Temperatura eh: ");
+              client.print("Temperature now is: ");
               client.print(localTemp);
               client.print("  oC<br>");
-              client.print("A humidade eh:     ");
+              client.print("Humidity now is:     ");
               client.print(localHum);
               client.print(" % <br>");
               client.print("<br>");
@@ -98,8 +88,8 @@ void WiFiLocalWebPageCtrl(void)
               client.print("<br>");
               client.print("<br>");
               
-              client.print("Clice <a href=\"/H\">here</a> para ligar o LED on.<br>");
-              client.print("Click <a href=\"/L\">here</a> para desligar o LED off.<br>");         
+              client.print("Click <a href=\"/H\">here</a> to turn the LED on.<br>");
+              client.print("Click <a href=\"/L\">here</a> to turn the LED off.<br>");         
 
             // The HTTP response ends with another blank line:
             client.println();
@@ -127,25 +117,22 @@ void WiFiLocalWebPageCtrl(void)
   }
 }
 
-/***************************************************
-* Connecting to a WiFi network
-****************************************************/
-void connectWiFi(void)
+void setup()
 {
-  Serial.println();
-  Serial.println();
-  Serial.print("Conectando em ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) 
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi conectado.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  
-  server.begin();
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT); 
+  delay(10);
+
+  connectWiFi();
+ 
+  dht.begin();
+}
+
+int value = 0;
+
+void loop()
+{
+  analog_value = analogRead(ANALOG_PIN_0);
+  getDHT();
+  WiFiLocalWebPageCtrl();
 }
