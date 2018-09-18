@@ -11,6 +11,11 @@ DHT dht(DHTPIN, DHTTYPE);
 float localHum = 0;
 float localTemp = 0;
 
+int sensorPin = 12;   
+int sensorValue = 0; 
+float Vout=0;
+float P=0;
+
 /* LED */
 #define LED_PIN 2
 
@@ -33,8 +38,8 @@ void connectWiFi(void)
   Serial.println("");
   Serial.println("WiFi conectado");
   Serial.print("Coloque: ");
+  Serial.print(WiFi.localIP());
   Serial.println(" , para acessar as informacoes");
-  Serial.println(WiFi.localIP());
   
   server.begin();
 }
@@ -53,6 +58,24 @@ void getDHT()
   }
 }
 
+void pitot()
+{ 
+int i=0;
+    int sum=0;
+    int offset=0;
+    for(i=0;i<10;i++)
+    {
+         sensorValue = analogRead(sensorPin)-512;
+         sum+=sensorValue;
+    }
+    for(i=0;i<10;i++){
+    offset=sum/10.0;
+       sensorValue = analogRead(sensorPin)-offset; 
+       Vout=(5*sensorValue)/1024.0;
+       P=Vout-2.5;}            
+  
+  
+}
 void WiFiLocalWebPageCtrl(void)
 {
   WiFiClient client = server.available();   // listen for incoming clients
@@ -74,7 +97,7 @@ void WiFiLocalWebPageCtrl(void)
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println();
-
+  
             // the content of the HTTP response follows the header:
             //WiFiLocalWebPageCtrl(); 
               client.print(" A temperature pelo DHT11 eh: ");
@@ -88,6 +111,11 @@ void WiFiLocalWebPageCtrl(void)
               client.print(analog_value);
               client.print("<br>");
               client.print("<br>");
+              client.print("Pressao pelo TUBO DE PITOT eh: " ); 
+              client.print(P*1000); 
+              client.print("  Pa<br>");
+              client.print("<br>");
+              
               
               client.print("Clique <a href=\"/H\">Aqui</a> para ligar o led.<br>");
               client.print("Clique <a href=\"/L\">Aqui</a> para desligar o led.<br>");         
@@ -136,5 +164,7 @@ void loop()
   analog_value = analogRead(ANALOG_PIN_0);
   getDHT();
   WiFiLocalWebPageCtrl();
+  pitot();
+ 
 }
 

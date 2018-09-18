@@ -1,12 +1,4 @@
-/*****************************************************
- * ESP32 DHT Reading, Time Stamping and OLED diplay 
- * DHT Input: ==> GPIO23.
- * 128 X 32 SSD1306  - Library by Daniel Eichhorn
- * 
- * MJRoBot.org 13Sept17
- *****************************************************/
 
-/* WiFi parameters and credentials */
 #include <WiFi.h>
 const char* ssid     = "AERO";
 const char* password = "aerodromo";
@@ -39,31 +31,6 @@ SSD1306  display(SSD_ADDRESS, SDA_PIN, SCL_PIN);
 DHT dht(DHTPIN, DHTTYPE);
 float localHum = 0;
 float localTemp = 0;
-
-void setup() 
-{
-  Serial.begin(115200);
-  Serial.println("");
-  Serial.println("ESP32 DHT Temp & Humidity with Time Stamp - OLED Display");
-  Serial.println("");
-  connectWiFi();
-  timeClient.begin();
-  dht.begin();
-
-  display.init();
-
-  display.flipScreenVertically();
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(Open_Sans_Condensed_Light_20); // set a font
-}
-
-void loop() 
-{
-  getDHT();
-  timeClient.update();
-  displayData();
-  delay(2000);
-}
 
 /***************************************************
 * Get indoor Temp/Hum data
@@ -129,3 +96,31 @@ void connectWiFi(void)
   Serial.println(WiFi.localIP());
   
 }
+
+
+void setup() 
+{
+  Serial.begin(115200);
+  Serial.println("");
+  Serial.println("ESP32 DHT Temp & Humidity with Time Stamp - OLED Display");
+  Serial.println("");
+  connectWiFi();
+  timeClient.begin();
+  dht.begin();
+
+  display.init();
+
+  display.flipScreenVertically();
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.setFont(Open_Sans_Condensed_Light_20); // set a font
+}
+
+void loop() 
+{
+  getDHT();
+  timeClient.update();
+  displayData();
+  delay(2000);
+}
+
+

@@ -1,15 +1,27 @@
 #include <WiFi.h>
-const char* ssid     = "AERO";
+const char* ssid     = "Laeromec";
 const char* password = "aerodromo";
 WiFiServer server(80);
 
 /* DHT Temperature and Humidity Sensor */
+
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+
+Adafruit_BMP085 bmp;
+
 #include "DHT.h"
-#define DHTPIN 22  
+#define DHTPIN 23  
 #define DHTTYPE DHT11 
 DHT dht(DHTPIN, DHTTYPE);
 float localHum = 0;
 float localTemp = 0;
+
+int sensorPin = 12;   
+int sensorValue = 0; 
+float Vout=0;
+float P=0;
+int i=0;
 
 /* LED */
 #define LED_PIN 2
@@ -33,10 +45,16 @@ void connectWiFi(void)
   Serial.println("");
   Serial.println("WiFi conectado");
   Serial.print("Coloque: ");
+  Serial.print(WiFi.localIP());
   Serial.println(" , para acessar as informacoes");
-  Serial.println(WiFi.localIP());
   
   server.begin();
+  for(i=0;i<10;i++){
+  digitalWrite(LED_PIN, HIGH);
+  delay (500);
+    digitalWrite(LED_PIN,LOW);
+  delay (500);
+  }
 }
 
 void getDHT()
@@ -52,6 +70,7 @@ void getDHT()
     return;
   }
 }
+
 
 void WiFiLocalWebPageCtrl(void)
 {
@@ -74,7 +93,7 @@ void WiFiLocalWebPageCtrl(void)
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println();
-
+  
             // the content of the HTTP response follows the header:
             //WiFiLocalWebPageCtrl(); 
               client.print(" A temperature pelo DHT11 eh: ");
@@ -84,10 +103,24 @@ void WiFiLocalWebPageCtrl(void)
               client.print(localHum);
               client.print(" % <br>");
               client.print("<br>");
-              client.print("Valor do potenciometro:     ");
-              client.print(analog_value);
+              
+              client.print("Temperatura no BMP180= ");
+              client.print(bmp.readTemperature());
+              client.println(" oC <br>");
+              client.print("Pressao no BMP180 = ");
+              client.print(bmp.readPressure());
+              client.print(" Pa <br>");
+              client.print("Altitude no BMP180= ");
+              client.print(bmp.readAltitude());
+              client.print(" m <br>");
+              client.print("Pressao no nivel do mar no BMP180 = ");
+              client.print(bmp.readSealevelPressure());
+              client.print(" Pa<br> ");
+              client.print("Altitude real no BMP180 = ");
+              client.print(bmp.readAltitude(102000));
+              client.print(" m<br>");
               client.print("<br>");
-              client.print("<br>");
+              
               
               client.print("Clique <a href=\"/H\">Aqui</a> para ligar o led.<br>");
               client.print("Clique <a href=\"/L\">Aqui</a> para desligar o led.<br>");         
@@ -123,18 +156,25 @@ void setup()
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT); 
   delay(10);
-
+  
   connectWiFi();
  
   dht.begin();
+
+   if (!bmp.begin()) {
+        Serial.println("nao foi encontrando o bmp180, favor verificar as conexoes!");
+  }
+
+  
 }
 
 int value = 0;
 
 void loop()
 {
-  analog_value = analogRead(ANALOG_PIN_0);
+
   getDHT();
   WiFiLocalWebPageCtrl();
+  
 }
 
